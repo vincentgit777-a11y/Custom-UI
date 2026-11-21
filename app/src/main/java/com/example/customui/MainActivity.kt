@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,7 +86,12 @@ fun LauncherScreen() {
                 key = { it.packageName + it.name },
                 contentType = { "app" }
             ) { app ->
-                AppGridItem(app)
+                AppGridItem(app) {
+                    context.packageManager.getLaunchIntentForPackage(app.packageName)?.let {
+                        it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(it)
+                    }
+                }
             }
         }
     }
@@ -116,11 +122,12 @@ data class LauncherApp(
 )
 
 @Composable
-fun AppGridItem(app: LauncherApp) {
+fun AppGridItem(app: LauncherApp, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(4.dp),
+            .padding(4.dp)
+            .clickable { onClick() },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
