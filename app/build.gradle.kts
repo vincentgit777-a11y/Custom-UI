@@ -25,6 +25,7 @@ android {
                 enable = true
                 packageScope = setOf("androidx.**", "kotlin.**", "kotlinx.**")
             }
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {

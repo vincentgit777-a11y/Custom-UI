@@ -24,18 +24,23 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import com.example.customui.ui.theme.CustomUITheme
 
 class MainActivity : ComponentActivity() {
@@ -53,7 +58,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun LauncherScreen() {
     val context = LocalContext.current
-    val apps = remember { getLaunchableApps(context) }
+    var apps by remember { mutableStateOf<List<LauncherApp>>(emptyList()) }
+
+    LaunchedEffect(Unit) {
+        apps = withContext(Dispatchers.Default) { getLaunchableApps(context) }
+    }
 
     Box(
         modifier = Modifier
@@ -67,7 +76,7 @@ fun LauncherScreen() {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(8.dp)
         ) {
-            items(apps) { app ->
+            items(apps, key = { it.packageName + it.name }) { app ->
                 AppGridItem(app)
             }
         }
@@ -83,7 +92,9 @@ private fun getLaunchableApps(context: Context): List<LauncherApp> {
             LauncherApp(
                 name = info.loadLabel(pm).toString(),
                 packageName = info.activityInfo.packageName,
-                icon = info.loadIcon(pm).toBitmap()
+                icon = info.loadIcon(pm)
+                    .toBitmap(width = 128, height = 128)
+                    .asImageBitmap()
             )
         }
         .sortedBy { it.name.lowercase() }
@@ -92,7 +103,7 @@ private fun getLaunchableApps(context: Context): List<LauncherApp> {
 data class LauncherApp(
     val name: String,
     val packageName: String,
-    val icon: Bitmap
+    val icon: ImageBitmap
 )
 
 @Composable
@@ -105,7 +116,7 @@ fun AppGridItem(app: LauncherApp) {
         verticalArrangement = Arrangement.Center
     ) {
         Image(
-            bitmap = app.icon.asImageBitmap(),
+            bitmap = app.icon,
             contentDescription = app.name,
             modifier = Modifier.size(48.dp)
         )
