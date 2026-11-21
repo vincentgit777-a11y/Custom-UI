@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,12 +33,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -76,7 +80,11 @@ fun LauncherScreen() {
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(8.dp)
         ) {
-            items(apps, key = { it.packageName + it.name }) { app ->
+            items(
+                items = apps,
+                key = { it.packageName + it.name },
+                contentType = { "app" }
+            ) { app ->
                 AppGridItem(app)
             }
         }
@@ -93,13 +101,14 @@ private fun getLaunchableApps(context: Context): List<LauncherApp> {
                 name = info.loadLabel(pm).toString(),
                 packageName = info.activityInfo.packageName,
                 icon = info.loadIcon(pm)
-                    .toBitmap(width = 128, height = 128)
+                    .toBitmap(width = 96, height = 96)
                     .asImageBitmap()
             )
         }
         .sortedBy { it.name.lowercase() }
 }
 
+@Immutable
 data class LauncherApp(
     val name: String,
     val packageName: String,
@@ -112,18 +121,20 @@ fun AppGridItem(app: LauncherApp) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(4.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
             bitmap = app.icon,
-            contentDescription = app.name,
+            contentDescription = null,
+            filterQuality = FilterQuality.Low,
             modifier = Modifier.size(48.dp)
         )
         Text(
             text = app.name,
             color = Color.White,
+            fontSize = 12.sp,
             maxLines = 1,
+            textAlign = TextAlign.Center,
             overflow = TextOverflow.Ellipsis
         )
     }
